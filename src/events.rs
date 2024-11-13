@@ -9,6 +9,9 @@ pub enum EventModifierFlag {
     /// CapsLock (or shift... oddly named...) is held.
     CapsLock,
 
+    /// Shift is held.
+    Shift,
+
     /// Control is held.
     Control,
 
@@ -26,6 +29,7 @@ impl From<EventModifierFlag> for NSUInteger {
     fn from(flag: EventModifierFlag) -> NSUInteger {
         match flag {
             EventModifierFlag::CapsLock => 1 << 16,
+            EventModifierFlag::Shift => 1 << 17,
             EventModifierFlag::Control => 1 << 18,
             EventModifierFlag::Option => 1 << 19,
             EventModifierFlag::Command => 1 << 20,
@@ -38,6 +42,7 @@ impl From<&EventModifierFlag> for NSUInteger {
     fn from(flag: &EventModifierFlag) -> NSUInteger {
         match flag {
             EventModifierFlag::CapsLock => 1 << 16,
+            EventModifierFlag::Shift => 1 << 17,
             EventModifierFlag::Control => 1 << 18,
             EventModifierFlag::Option => 1 << 19,
             EventModifierFlag::Command => 1 << 20,
