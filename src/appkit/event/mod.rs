@@ -174,6 +174,7 @@ use crate::foundation::NSUInteger;
 #[derive(Clone, Copy, Debug)]
 pub enum EventModifierFlag {
     CapsLock,
+    Shift,
     Control,
     Option,
     Command,
@@ -184,6 +185,7 @@ impl From<EventModifierFlag> for NSUInteger {
     fn from(flag: EventModifierFlag) -> NSUInteger {
         match flag {
             EventModifierFlag::CapsLock => 1 << 16,
+            EventModifierFlag::Shift => 1 << 17,
             EventModifierFlag::Control => 1 << 18,
             EventModifierFlag::Option => 1 << 19,
             EventModifierFlag::Command => 1 << 20,
@@ -196,6 +198,7 @@ impl From<&EventModifierFlag> for NSUInteger {
     fn from(flag: &EventModifierFlag) -> NSUInteger {
         match flag {
             EventModifierFlag::CapsLock => 1 << 16,
+            EventModifierFlag::Shift => 1 << 17,
             EventModifierFlag::Control => 1 << 18,
             EventModifierFlag::Option => 1 << 19,
             EventModifierFlag::Command => 1 << 20,
