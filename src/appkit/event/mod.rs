@@ -83,6 +83,16 @@ impl Event {
         characters.to_string()
     }
 
+    /// The characters associated with a key-up or key-down event as if no modifier key (except for Shift) applies.
+    pub fn characters_ignoring_modifiers(&self) -> String {
+        // @TODO: Check here if key event, invalid otherwise.
+        // @TODO: Figure out if we can just return &str here, since the Objective-C side
+        // should... make it work, I think.
+        let characters = NSString::retain(unsafe { msg_send![&*self.0, charactersIgnoringModifiers] });
+
+        characters.to_string()
+    }
+
     /// The indices of the currently pressed mouse buttons.
     pub fn pressed_mouse_buttons() -> NSUInteger {
         unsafe { msg_send![class!(NSEvent), pressedMouseButtons] }
