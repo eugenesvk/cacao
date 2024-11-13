@@ -6,7 +6,7 @@ use objc::{class, msg_send, sel, sel_impl};
 use objc_id::Id;
 
 use crate::events::EventType;
-use crate::foundation::{id, nil, NSInteger, NSPoint, NSString};
+use crate::foundation::{id, nil, NSInteger, NSPoint, NSString, NSUInt16};
 
 /// An EventMask describes the type of event.
 #[bitmask(u64)]
@@ -91,6 +91,14 @@ impl Event {
         let characters = NSString::retain(unsafe { msg_send![&*self.0, charactersIgnoringModifiers] });
 
         characters.to_string()
+    }
+
+    /// The virtual code for the key associated with the event
+    pub fn key_code(&self) -> NSUInt16 {
+        // @TODO: Check here if key event, invalid otherwise.
+        // @TODO: Figure out if we can just return &str here, since the Objective-C side
+        // should... make it work, I think.
+        unsafe { msg_send![&*self.0, keyCode] }
     }
 
     /// The indices of the currently pressed mouse buttons.
