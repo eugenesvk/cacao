@@ -68,22 +68,23 @@ impl Event {
     ///
     /// Corresponds to the `type` getter.
     pub fn kind(&self) -> EventType {
-        let kind: NSUInteger = unsafe { msg_send![&*self.0, type] };
+let kind: NSUInteger = unsafe { msg_send![&*self.0, type] };
 
-        unsafe { ::std::mem::transmute(kind) }
-    }
+unsafe { ::std::mem::transmute(kind) }
+}
 
     /// The characters associated with a key-up or key-down event.
     pub fn characters(&self) -> String {
-        // @TODO: Check here if key event, invalid otherwise.
-        // @TODO: Figure out if we can just return &str here, since the Objective-C side
-        // should... make it work, I think.
-        let characters = NSString::retain(unsafe { msg_send![&*self.0, characters] });
+// @TODO: Check here if key event, invalid otherwise.
+// @TODO: Figure out if we can just return &str here, since the Objective-C side
+// should... make it work, I think.
+let characters = NSString::retain(unsafe { msg_send![&*self.0, characters] });
 
-        characters.to_string()
-    }
+characters.to_string()
+}
 
     /// The characters associated with a key-up or key-down event as if no modifier key (except for Shift) applies.
+
     pub fn characters_ignoring_modifiers(&self) -> String {
         // @TODO: Check here if key event, invalid otherwise.
         // @TODO: Figure out if we can just return &str here, since the Objective-C side
@@ -92,34 +93,46 @@ impl Event {
 
         characters.to_string()
     }
-
     /// The virtual code for the key associated with the event
+
     pub fn key_code(&self) -> NSUInt16 {
         // @TODO: Check here if key event, invalid otherwise.
         // @TODO: Figure out if we can just return &str here, since the Objective-C side
         // should... make it work, I think.
         unsafe { msg_send![&*self.0, keyCode] }
     }
+    /// An integer bit field that indicates the pressed modifier keys
+
+    pub fn modifier_flags(&self) -> EventModifierBitFlag {
+        let flags: NSUInteger = unsafe { msg_send![&*self.0, modifierFlags] };
+
+        flags.into()
+    }
+    /// A raw integer bit field that indicates the pressed modifier keys
+
+    pub fn modifier_flags_raw(&self) -> NSUInteger {
+        unsafe { msg_send![&*self.0, modifierFlags] }
+    }
 
     /// The indices of the currently pressed mouse buttons.
     pub fn pressed_mouse_buttons() -> NSUInteger {
-        unsafe { msg_send![class!(NSEvent), pressedMouseButtons] }
-    }
+unsafe { msg_send![class!(NSEvent), pressedMouseButtons] }
+}
 
     /// Reports the current mouse position in screen coordinates.
     pub fn mouse_location() -> NSPoint {
-        unsafe { msg_send![class!(NSEvent), mouseLocation] }
-    }
+unsafe { msg_send![class!(NSEvent), mouseLocation] }
+}
 
     /// The button number for a mouse event.
     pub fn button_number(&self) -> NSInteger {
-        unsafe { msg_send![&*self.0, buttonNumber] }
-    }
+unsafe { msg_send![&*self.0, buttonNumber] }
+}
 
     /// The number of mouse clicks associated with a mouse-down or mouse-up event.
     pub fn click_count(&self) -> NSInteger {
-        unsafe { msg_send![&*self.0, clickCount] }
-    }
+unsafe { msg_send![&*self.0, clickCount] }
+}
 
     /*pub fn contains_modifier_flags(&self, flags: &[EventModifierFlag]) -> bool {
         let modifier_flags: NSUInteger = unsafe {
@@ -141,24 +154,24 @@ impl Event {
     /// Note that in order to monitor all possible events, both local and global
     /// monitors are required - the streams don't mix.
     pub fn local_monitor<F>(mask: EventMask, handler: F) -> EventMonitor
-    where
-        F: Fn(Event) -> Option<Event> + Send + Sync + 'static
-    {
-        let block = ConcreteBlock::new(move |event: id| {
-            let evt = Event::new(event);
+where
+    F: Fn(Event) -> Option<Event> + Send + Sync + 'static
+{
+    let block = ConcreteBlock::new(move |event: id| {
+        let evt = Event::new(event);
 
-            match handler(evt) {
-                Some(mut evt) => &mut *evt.0,
-                None => nil
-            }
-        });
-        let block = block.copy();
+        match handler(evt) {
+            Some(mut evt) => &mut *evt.0,
+            None => nil
+        }
+    });
+    let block = block.copy();
 
-        EventMonitor(unsafe {
-            msg_send![class!(NSEvent), addLocalMonitorForEventsMatchingMask:mask.bits
-                handler:block]
-        })
-    }
+    EventMonitor(unsafe {
+        msg_send![class!(NSEvent), addLocalMonitorForEventsMatchingMask:mask.bits
+            handler:block]
+    })
+}
 
     /// Register an event handler with the global system event stream. This method
     /// watches for events that occur _outside the application_. Events within
@@ -167,24 +180,24 @@ impl Event {
     /// Note that in order to monitor all possible events, both local and global
     /// monitors are required - the streams don't mix.
     pub fn global_monitor<F>(mask: EventMask, handler: F) -> EventMonitor
-    where
-        F: Fn(Event) -> Option<Event> + Send + Sync + 'static
-    {
-        let block = ConcreteBlock::new(move |event: id| {
-            let evt = Event::new(event);
+where
+    F: Fn(Event) -> Option<Event> + Send + Sync + 'static
+{
+    let block = ConcreteBlock::new(move |event: id| {
+        let evt = Event::new(event);
 
-            match handler(evt) {
-                Some(mut evt) => &mut *evt.0,
-                None => nil
-            }
-        });
-        let block = block.copy();
+        match handler(evt) {
+            Some(mut evt) => &mut *evt.0,
+            None => nil
+        }
+    });
+    let block = block.copy();
 
-        EventMonitor(unsafe {
-            msg_send![class!(NSEvent), addGlobalMonitorForEventsMatchingMask:mask.bits
-                handler:block]
-        })
-    }
+    EventMonitor(unsafe {
+        msg_send![class!(NSEvent), addGlobalMonitorForEventsMatchingMask:mask.bits
+            handler:block]
+    })
+}
 }
 
 use crate::foundation::NSUInteger;
@@ -223,4 +236,33 @@ impl From<&EventModifierFlag> for NSUInteger {
             EventModifierFlag::DeviceIndependentFlagsMask => 0xffff0000
         }
     }
+}
+
+// #[cfg(target_pointer_width = "32")] //@TODO contitional compilation fails, so always use 64
+// #[bitmask(u32)]
+// #[cfg(target_pointer_width = "64")]
+/// Flags that indicate which modifier keys are in the mix for an event.
+#[bitmask(u64)]
+#[bitmask_config(inverted_flags)]
+pub enum EventModifierBitFlag {
+    CapsLock     = 1 << 16,
+    LeftShift    =(1 << 17) + (1 <<  1),
+    RightShift   =(1 << 17) + (1 <<  2),
+    LeftControl  =(1 << 18) + (1 <<  0),
+    RightControl =(1 << 18) + (1 << 13),
+    LeftOption   =(1 << 19) + (1 <<  5),
+    RightOption  =(1 << 19) + (1 <<  6),
+    LeftCommand  =(1 << 20) + (1 <<  3),
+    RightCommand =(1 << 20) + (1 <<  4),
+    Shift        = Self::LeftShift  .bits | Self::RightShift  .bits,
+    Control      = Self::LeftControl.bits | Self::RightControl.bits,
+    Option       = Self::LeftOption .bits | Self::RightOption .bits,
+    Command      = Self::LeftCommand.bits | Self::RightCommand.bits,
+    LeftModi     = Self::LeftShift  .bits | Self::LeftControl .bits | Self::LeftOption .bits | Self::LeftCommand .bits,
+    RightModi    = Self::RightShift .bits | Self::RightControl.bits | Self::RightOption.bits | Self::RightCommand.bits,
+    LRModi       = Self::LeftModi   .bits | Self::RightModi   .bits,
+    Numpad       = 1 << 21,
+    Help         = 1 << 22,
+    Function     = 1 << 23,
+    DeviceIndependentFlagsMask = 0xffff0000,
 }
